@@ -3,6 +3,7 @@ package org.xpathqs.web.selenium.constants
 import org.openqa.selenium.WebDriver
 import org.xpathqs.driver.executor.IExecutor
 import org.xpathqs.web.constants.WebGlobalCls
+import org.xpathqs.web.selenium.executor.SeleniumCachedExecutor
 import org.xpathqs.web.selenium.executor.SeleniumExecutor
 import java.time.Duration
 
@@ -17,10 +18,6 @@ open class SeleniumGlobalCls : WebGlobalCls() {
 
     fun init(executor: IExecutor) {
         this.localExecutor.set(executor)
-
-        (executor as? SeleniumExecutor)?.let {
-            webDriver.set(it.webDriver)
-        }
 
         Global.localExecutor.set(executor)
         org.xpathqs.driver.constants.Global.localExecutor.set(executor)

@@ -3,6 +3,7 @@ package org.xpathqs.web.selenium.driver
 import org.openqa.selenium.*
 import org.openqa.selenium.interactions.Actions
 import org.openqa.selenium.support.ui.ExpectedConditions
+import org.openqa.selenium.support.ui.FluentWait
 import org.openqa.selenium.support.ui.WebDriverWait
 import org.xpathqs.core.selector.base.BaseSelector
 import org.xpathqs.core.selector.base.ISelector
@@ -12,10 +13,12 @@ import org.xpathqs.core.selector.block.Block
 import org.xpathqs.core.selector.block.findWithAnnotation
 import org.xpathqs.core.selector.extensions.text
 import org.xpathqs.driver.extensions.click
-import org.xpathqs.driver.log.Log
+import org.xpathqs.driver.extensions.ms
+import org.xpathqs.driver.extensions.wait
 import org.xpathqs.driver.navigation.annotations.UI
+import org.xpathqs.log.Log
 import org.xpathqs.web.selenium.constants.Global
-
+import java.time.Duration
 
 open class SeleniumWebDriver(
     protected val driver: WebDriver
@@ -23,12 +26,24 @@ open class SeleniumWebDriver(
     override val pageSource: String
         get() = driver.pageSource
 
-    override fun clear(selector: ISelector) {
-        click(selector)
+    override fun clear(selector: ISelector, clickSelector: ISelector) {
+        click(clickSelector)
 
         val elem = selector.toWebElement()
-        while (elem.getAttribute("value")?.isNotEmpty() == true) {
+        var prevValue = elem.getAttribute("value")
+        var curValue = prevValue
+        var eqCounter = 0
+        while (curValue?.isNotEmpty() == true) {
             elem.sendKeys(Keys.BACK_SPACE)
+            curValue = elem.getAttribute("value")
+            if(prevValue == curValue) {
+                eqCounter++
+                if(eqCounter > 100) {
+                    eqCounter = 0
+                    click(clickSelector)
+                }
+            }
+            prevValue = curValue
         }
     }
 
@@ -43,8 +58,9 @@ open class SeleniumWebDriver(
                     eval {
                         (driver as JavascriptExecutor).executeScript(
                             "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
-                            selector.toWebElement())
-                        Thread.sleep(500)
+                            selector.toWebElement()
+                        )
+                        wait(100.ms, "delay after clicking at DropDown item")
                     }
                 }
             }
@@ -65,7 +81,7 @@ open class SeleniumWebDriver(
             }
 
             if(elem == null) {
-                Thread.sleep(2000)
+                wait(2000.ms, "delay when there is no element to click on")
                 elem = driver.findElements(By.xpath(selector.toXpath())).firstOrNull {
                     it.isDisplayed
                 }
@@ -79,7 +95,7 @@ open class SeleniumWebDriver(
                 (driver as JavascriptExecutor).executeScript(
                     "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
                     elem)
-                Thread.sleep(500)
+                wait(500.ms, "delay after scroll in click")
             }
             eval {
                 t.until(ExpectedConditions.elementToBeClickable(elem))
@@ -118,14 +134,13 @@ open class SeleniumWebDriver(
         try {
             selector.toWebElement().sendKeys(value)
         } catch (e: Exception) {
+            Log.error("Got exception in sendkeys")
             click(selector)
             selector.toWebElement().sendKeys(value)
         }
         val ms = (selector as? BaseSelector)?.findAnnotation<UI.Widgets.Input>()?.afterInputDelayMs ?: 0
         if(ms > 0) {
-            Log.action("Sleep for $ms after input into $selector") {
-                Thread.sleep(ms)
-            }
+            wait(ms.ms, "Sleep for $ms after input into $selector")
         }
     }
 
@@ -151,14 +166,24 @@ open class SeleniumWebDriver(
             driver.switchTo().window(it)
         }
     }
+}
 
-    private fun ISelector.toWebElement(): WebElement {
-        return try {
-            driver.findElement(By.xpath(this.toXpath()))
-        } catch (e: Exception) {
-            Log.error("Selector $name can't be found")
-            throw e
+fun ISelector.toWebElement(): WebElement {
+    return try {
+        val driver = Global.webDriver.get()
+        val wait = FluentWait(driver)
+            .withTimeout(Duration.ofSeconds(5))
+            .pollingEvery(Duration.ofMillis(250))
+            .ignoring(NoSuchElementException::class.java)
+
+        wait.until {
+            it.findElement(
+                By.xpath(this.toXpath())
+            )
         }
+    } catch (e: Exception) {
+        Log.error("Selector $name can't be found")
+        throw e
     }
 }
 

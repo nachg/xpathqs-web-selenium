@@ -11,6 +11,7 @@ import org.xpathqs.driver.actions.WaitForSelectorAction
 import org.xpathqs.driver.actions.WaitForSelectorDisappearAction
 import org.xpathqs.driver.executor.ActionExecMap
 import org.xpathqs.driver.executor.Decorator
+import org.xpathqs.driver.model.IBaseModel
 import org.xpathqs.web.selenium.constants.Global
 import java.util.concurrent.TimeUnit
 
@@ -29,12 +30,12 @@ open class SeleniumExecutor(
         }
     }
 
-    override fun getAttr(selector: BaseSelector, attr: String): String {
+    override fun getAttr(selector: BaseSelector, attr: String, model: IBaseModel?): String {
         val elem = selector.webElement
         return if (attr == Global.TEXT_ARG) elem.text else elem.getAttribute(attr)
     }
 
-    override fun getAttrs(selector: BaseSelector, attr: String): Collection<String> {
+    override fun getAttrs(selector: BaseSelector, attr: String, model: IBaseModel?): Collection<String> {
         return selector.webElements.map { it.getAttribute(attr) }
     }
 

@@ -5,8 +5,8 @@ import io.github.bonigarcia.wdm.config.DriverManagerType
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.chrome.ChromeDriver
 import org.openqa.selenium.chrome.ChromeOptions
-import org.openqa.selenium.remote.DesiredCapabilities
-import org.xpathqs.driver.log.Log
+import org.xpathqs.log.Log
+import org.xpathqs.web.selenium.constants.Global
 
 class DriverFactory(
     val type: DriverManagerType = DriverManagerType.CHROME,
@@ -20,12 +20,16 @@ class DriverFactory(
         } catch (e: Exception) {
             Log.error(e.message ?: e.toString())
         }
-        return if(type == DriverManagerType.CHROME) {
+        val res = if(type == DriverManagerType.CHROME) {
             ChromeDriver(options)
         } else {
             val driverClass = Class.forName(type.browserClass())
             driverClass.getDeclaredConstructor().newInstance() as WebDriver
         }
+
+        Global.webDriver.set(res)
+
+        return res
     }
 
     companion object {
@@ -38,8 +42,11 @@ class DriverFactory(
 
             val options = ChromeOptions()
             options.addArguments("--allow-insecure-localhost")
+            options.addArguments("--disable-web-security")
+            options.addArguments("--allow-running-insecure-content")
             options.setCapability(ChromeOptions.CAPABILITY, options)
             options.setCapability("acceptInsecureCerts", true)
+
 
             return options
         }

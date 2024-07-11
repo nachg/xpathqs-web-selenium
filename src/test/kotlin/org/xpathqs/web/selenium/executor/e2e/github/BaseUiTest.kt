@@ -3,9 +3,9 @@ package org.xpathqs.web.selenium.executor.e2e.github
 import org.openqa.selenium.WebDriver
 import org.xpathqs.core.constants.CoreGlobalProps
 import org.xpathqs.core.reflection.scanPackage
-import org.xpathqs.driver.log.Log
 import org.xpathqs.driver.navigation.NavExecutor
 import org.xpathqs.log.BaseLogger
+import org.xpathqs.log.Log
 import org.xpathqs.log.Logger
 import org.xpathqs.log.printers.StreamLogPrinter
 import org.xpathqs.log.printers.args.NoArgsProcessor

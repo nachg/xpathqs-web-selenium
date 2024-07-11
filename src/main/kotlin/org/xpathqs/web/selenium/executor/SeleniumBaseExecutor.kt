@@ -12,7 +12,7 @@ import org.xpathqs.driver.actions.ScreenShotAction
 import org.xpathqs.driver.executor.ActionExecMap
 import org.xpathqs.driver.executor.Decorator
 import org.xpathqs.driver.extensions.screenshot
-import org.xpathqs.driver.log.Log
+import org.xpathqs.log.Log
 import org.xpathqs.web.selenium.util.Screenshot
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
